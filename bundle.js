@@ -4,11 +4,13 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
+const Enemy = require('./enemy.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var player = new Player({x: 382, y: 460})
+var player = new Player({x: 382, y: 440})
+var enemy = new Enemy({x: 100, y: 100})
 
 /**
  * @function masterLoop
@@ -31,7 +33,8 @@ masterLoop(performance.now());
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-
+  player.update(elapsedTime);
+  enemy.update(elapsedTime);
   // TODO: Update the game objects
 }
 
@@ -46,9 +49,70 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "lightblue";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
+  enemy.render(elapsedTime, ctx);
 }
 
-},{"./game.js":2,"./player.js":3}],2:[function(require,module,exports){
+},{"./enemy.js":2,"./game.js":3,"./player.js":4}],2:[function(require,module,exports){
+"use strict";
+
+/**
+ * @module exports the Enemy class
+ */
+module.exports = exports = Enemy;
+
+/**
+  * @constructor Enemey
+  * Creates a new enemy object
+  * @param {Postition} position object specifying an x and y
+  */
+function Enemy(position) {
+  this.state = "waiting"
+  this.frame = 0;
+  this.timer = 0;
+  this.x = position.x;
+  this.y = position.y;
+  this.width  = 32;
+  this.height = 16;
+  this.spritesheet  = new Image();
+  this.spritesheet.src = encodeURI('assets/spider/spider walk.png');
+}
+
+/**
+ * @function updates the enemy object
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ */
+Enemy.prototype.update = function(elapsedTime) {
+
+  this.timer += elapsedTime;
+  switch (this.state) {
+    case "waiting" :
+      if (this.timer > 1000/16) {
+        this.frame = (this.frame + 1) % 4;
+        this.timer = 0;
+      }
+      this.y += 1;
+      break;
+  }
+}
+
+/**
+ * @function renders the enemy into the provided context
+ * {DOMHighResTimeStamp} time the elapsed time since the last frame
+ * {CanvasRenderingContext2D} ctx the context to render into
+ */
+Enemy.prototype.render = function(time, ctx) {
+
+  ctx.drawImage(
+    // image
+    this.spritesheet,
+    // source rectangle
+    this.frame * this.width, 0, this.width, this.height,
+    // destination rectangle
+    this.x, this.y, 2*this.width, 2*this.height
+  );
+}
+
+},{}],3:[function(require,module,exports){
 "use strict";
 
 /**
@@ -106,7 +170,7 @@ Game.prototype.loop = function(newTime) {
   this.frontCtx.drawImage(this.backBuffer, 0, 0);
 }
 
-},{}],3:[function(require,module,exports){
+},{}],4:[function(require,module,exports){
 "use strict";
 
 /**
@@ -114,25 +178,49 @@ Game.prototype.loop = function(newTime) {
  */
 module.exports = exports = Player;
 
+
 /**
  * @constructor Player
  * Creates a new player object
  * @param {Postition} position object specifying an x and y
  */
 function Player(position) {
+  this.state = "waiting"
+  this.frame = 0;
+  this.timer = 0;
   this.x = position.x;
   this.y = position.y;
   this.width  = 16;
   this.height = 16;
   this.spritesheet  = new Image();
   this.spritesheet.src = encodeURI('assets/link/not link/notlink up.png');
+
+  var self = this;
+  window.onmousedown = function(event) {
+    if (self.state == "waiting") {
+      this.x = event.clientX;
+      self.state = "walking";
+    }
+
+  }
 }
 
 /**
  * @function updates the player object
  * {DOMHighResTimeStamp} time the elapsed time since the last frame
  */
-Player.prototype.update = function(time) {}
+Player.prototype.update = function(elapsedTime) {
+  this.timer += elapsedTime;
+  switch (this.state) {
+    case "walking" :
+      if (this.timer > 1000/16) {
+        this.frame = (this.frame + 1) % 4;
+        this.timer = 0;
+      }
+      this.y -= 1;
+      break;
+  }
+}
 
 /**
  * @function renders the player into the provided context
@@ -140,13 +228,14 @@ Player.prototype.update = function(time) {}
  * {CanvasRenderingContext2D} ctx the context to render into
  */
 Player.prototype.render = function(time, ctx) {
+
   ctx.drawImage(
     // image
     this.spritesheet,
     // source rectangle
-    0, 0, this.width, this.height,
+    this.frame * this.width, 0, this.width, this.height,
     // destination rectangle
-    this.x, this.y, this.width, this.height
+    this.x, this.y, 2*this.width, 2*this.height
   );
 }
 

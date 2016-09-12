@@ -3,11 +3,13 @@
 /* Classes */
 const Game = require('./game.js');
 const Player = require('./player.js');
+const Enemy = require('./enemy.js');
 
 /* Global variables */
 var canvas = document.getElementById('screen');
 var game = new Game(canvas, update, render);
-var player = new Player({x: 382, y: 460})
+var player = new Player({x: 382, y: 440})
+var enemy = new Enemy({x: 100, y: 100})
 
 /**
  * @function masterLoop
@@ -30,7 +32,8 @@ masterLoop(performance.now());
  * the number of milliseconds passed since the last frame.
  */
 function update(elapsedTime) {
-
+  player.update(elapsedTime);
+  enemy.update(elapsedTime);
   // TODO: Update the game objects
 }
 
@@ -45,4 +48,5 @@ function render(elapsedTime, ctx) {
   ctx.fillStyle = "lightblue";
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   player.render(elapsedTime, ctx);
+  enemy.render(elapsedTime, ctx);
 }
